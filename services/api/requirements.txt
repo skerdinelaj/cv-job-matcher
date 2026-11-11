@@ -11,3 +11,6 @@ pydantic-settings>=2.4       # reads .env into a typed Settings object
 sqlalchemy>=2.0              # ORM: tables as Python classes
 alembic>=1.13                # migrations
 psycopg[binary]>=3.2         # the PostgreSQL driver (like `pg` in Node)
+
+# --- Fetching jobs (Step 2) ---
+httpx>=0.27                  # HTTP client (like `fetch` / axios)

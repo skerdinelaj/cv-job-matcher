@@ -61,3 +61,33 @@ One entry per step, in simple words.
 - **Dependency injection:** FastAPI creates what your endpoint needs (here a session) and passes it in for you.
 - **Type hint:** `Mapped[str | None]` tells Python (and SQLAlchemy) the type; here it also decides NOT NULL vs nullable.
 - **Unique constraint:** a database rule that refuses two rows with the same value in a column.
+
+## Step 2: Fetchers + dedupe + ingest runs
+**The idea:** Each job site sends its data in its own format. A small "fetcher" for each site downloads the JSON and converts it into one shared shape (`RawJob`). Then we save the jobs, and the database itself refuses jobs we already have, so running the command twice adds nothing new.
+
+**What we built:**
+- `app/text.py`: helpers to turn HTML into plain text, repair broken characters (`â€”` → `—`), and lowercase text for the fingerprint.
+- `app/fetchers/base.py`: `RawJob` (the shared job shape) and `Fetcher` (the base class: `fetch()` = `download()` + `parse()`).
+- `app/fetchers/arbeitnow.py`, `remoteok.py`, `remotive.py`: one small fetcher per site; each only writes `parse()`.
+- `app/fetchers/__init__.py`: `ALL_FETCHERS`, the list of sources.
+- `app/ingest.py`: `python -m app.ingest`. For each source: log a run, fetch, insert with `ON CONFLICT DO NOTHING`, count new vs duplicate, save the result in `ingest_runs`.
+- `tests/fixtures/*.json`: 3 real sample jobs per source, for tests later.
+
+**Like in JavaScript:**
+- `httpx.get(...)` ≈ `fetch(...)` / axios; `raise_for_status()` ≈ `if (!res.ok) throw ...`.
+- Pydantic `RawJob` ≈ a TypeScript interface that is also checked at runtime (like zod).
+- `Fetcher` base class with `parse()` ≈ an interface every adapter implements (the adapter pattern).
+- `if __name__ == "__main__":` ≈ code that runs only when you call `node file.js`, not when you import it.
+
+**Why this way:** The duplicate check lives in the database (a unique `content_hash` + `ON CONFLICT DO NOTHING`), so it's always enforced and costs one query. The trade-off: the fingerprint is company + title, so one company posting the same title for two countries counts as one job.
+
+**Interview line:** "Every source is a small adapter with the same interface, `parse()` is pure so it's tested on saved fixtures, and dedupe is enforced by a unique constraint, which makes the ingest safe to re-run."
+
+**Words to know:**
+- **Fetcher / adapter:** a small piece of code that converts one outside format into our own format.
+- **Normalise:** convert different formats into one standard shape.
+- **Hash (SHA-256):** a fixed-length fingerprint of some text; the same text always gives the same hash.
+- **Idempotent:** running it twice gives the same result as once (the second ingest added 0 jobs).
+- **`ON CONFLICT DO NOTHING`:** Postgres: "if this row breaks a unique rule, skip it quietly instead of failing."
+- **Fixture:** a saved sample of real data used in tests, so tests don't need the network.
+- **Mojibake:** garbled characters caused by reading text with the wrong encoding.
