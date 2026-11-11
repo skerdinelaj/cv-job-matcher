@@ -29,3 +29,35 @@ One entry per step, in simple words.
 - **Port:** a numbered door on my computer; only one program can use each door. 5432 was taken, so we use 5433.
 - **Embedding:** a list of numbers that represents the meaning of a text, so similar texts get similar numbers.
 - **pgvector:** a Postgres add-on that stores embeddings and finds the most similar ones quickly.
+
+## Step 1: FastAPI + database + first migration
+**The idea:** We now have a small web API (FastAPI) that can talk to the database. Tables are written as Python classes, and a migration tool (Alembic) turns those classes into real tables in Postgres. A `/health` endpoint proves the API and the database are both working.
+
+**What we built:**
+- `services/api/app/config.py`: reads `.env` into one typed `settings` object, so a missing or wrong setting fails at startup.
+- `services/api/app/db.py`: the connection pool (engine), sessions, the `Base` class for tables, and `get_db()` that gives each request its own session.
+- `services/api/app/models.py`: the `jobs` and `ingest_runs` tables as Python classes.
+- `services/api/app/main.py`: the FastAPI app with `GET /health`.
+- `services/api/alembic.ini`, `alembic/env.py`, `alembic/script.py.mako`: Alembic setup. It reads the database URL from `.env`.
+- `services/api/alembic/versions/..._create_jobs_and_ingest_runs.py`: the first migration, written by Alembic and checked by me.
+
+**Like in JavaScript:**
+- FastAPI ≈ Express: `@app.get("/health")` ≈ `app.get("/health", handler)`.
+- SQLAlchemy ≈ Prisma/TypeORM: a class = a table.
+- Alembic ≈ Prisma Migrate: `alembic revision --autogenerate` ≈ `prisma migrate dev`, `alembic upgrade head` ≈ `prisma migrate deploy`.
+- `pydantic-settings` ≈ validating `process.env` with zod.
+- `Depends(get_db)` ≈ a middleware that attaches a database connection to each request.
+- `uvicorn --reload` ≈ `nodemon`.
+
+**Why this way:** Migrations are versioned files in git, so anyone (or CI) can rebuild the exact same database. The trade-off: autogenerate can miss or guess wrong, so I always read the migration before applying it.
+
+**Interview line:** "Schema changes go through reviewed Alembic migrations, and constraints like unique `content_hash` live in the database, so duplicates are impossible even if the code has a bug."
+
+**Words to know:**
+- **ORM:** a library that lets you use database tables as classes and objects instead of writing raw SQL.
+- **Migration:** a versioned script that changes the database structure (create a table, add a column), with an undo (`downgrade`).
+- **Session:** one conversation with the database; you add or change things, then `commit` to save them.
+- **Engine / connection pool:** a set of open database connections that get reused, because opening a new one each time is slow.
+- **Dependency injection:** FastAPI creates what your endpoint needs (here a session) and passes it in for you.
+- **Type hint:** `Mapped[str | None]` tells Python (and SQLAlchemy) the type; here it also decides NOT NULL vs nullable.
+- **Unique constraint:** a database rule that refuses two rows with the same value in a column.

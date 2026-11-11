@@ -1,3 +1,13 @@
-# Step 0: only what the model-list script needs. We add more each step.
+# --- Gemini (Step 0) ---
 google-genai>=1.0
 python-dotenv>=1.0
+
+# --- Web API (Step 1) ---
+fastapi>=0.115
+uvicorn[standard]>=0.30      # the server that runs FastAPI (like `node server.js`)
+pydantic-settings>=2.4       # reads .env into a typed Settings object
+
+# --- Database (Step 1) ---
+sqlalchemy>=2.0              # ORM: tables as Python classes
+alembic>=1.13                # migrations
+psycopg[binary]>=3.2         # the PostgreSQL driver (like `pg` in Node)
