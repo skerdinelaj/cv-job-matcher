@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     gemini_chat_model: str = ""
     gemini_embed_model: str = ""
 
+    # LLM safety limits (used by app/llm.py)
+    llm_requests_per_minute: int = 10  # stay under the free-tier limit
+    llm_max_attempts: int = 4  # 1 try + up to 3 retries when Google is busy
+
     # Safety: real email sending only when explicitly set to "live"
     email_mode: Literal["dry_run", "live"] = "dry_run"
 

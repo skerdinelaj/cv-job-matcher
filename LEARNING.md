@@ -91,3 +91,4 @@ One entry per step, in simple words.
 - **`ON CONFLICT DO NOTHING`:** Postgres: "if this row breaks a unique rule, skip it quietly instead of failing."
 - **Fixture:** a saved sample of real data used in tests, so tests don't need the network.
 - **Mojibake:** garbled characters caused by reading text with the wrong encoding.
+
