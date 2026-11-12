@@ -1,7 +1,7 @@
 # JobMatch: my personal job-search assistant (guided learning + portfolio project)
 
 ## Who I am and the goal
-I'm Skerdi, a full-stack developer (5 years React/TypeScript) moving into AI engineering. I live in Albania and I'm looking for remote jobs. I'm still learning Python. I learn best hands-on and guided, with short and simple explanations.
+I'm Skerdi, a full-stack developer (5 years React/TypeScript) moving into AI engineering. I live in Albania and I'm looking for remote jobs. I'm still learning Python. I'm also learning Angular through this project's frontend. I learn best hands-on and guided, with short and simple explanations.
 
 **The product (personal use only):** an app that automates my job search from start to finish, with me approving every application:
 1. **Find**: every night, collect new jobs from free job APIs.
@@ -30,9 +30,16 @@ Keep a file `LEARNING.md` in the project root. After EVERY completed step, add o
 **Why this way:** the main decision and its trade-off, in 1-2 sentences.
 **Interview line:** one sentence I can say in an interview.
 **Words to know:** new terms, each with a one-line meaning.
+**Check yourself:** one quick question for me to answer.
 ```
 
-Write it as if explaining to someone new to Python and AI. Add the entry before suggesting the commit for that step.
+For Angular steps, use the same format, but:
+- replace **Like in JavaScript** with **Like in React** (e.g. useState → signal, useEffect → effect, Context → service + inject);
+- add **Old way:** one line showing the pre-signals / NgModule version (interviews and older codebases still use it).
+
+Every entry, backend or Angular, ends with **Check yourself:** (one quick check question).
+
+Write it as if explaining to someone new to Python, Angular and AI. Add the entry before suggesting the commit for that step.
 
 ## How you must work with me
 - Go ONE step at a time. Never build everything at once.
@@ -42,15 +49,28 @@ Write it as if explaining to someone new to Python and AI. Add the entry before 
 - When something fails, explain the error simply before fixing it.
 - Be direct and concise. Ask before big assumptions.
 - After each working step, suggest a commit message (Conventional Commits) and let me commit.
+- The same rules apply to Angular steps: one step at a time, explain in 3-4 simple sentences, code for that step only, exact commands, wait for me to run them, update `LEARNING.md`, suggest a commit.
 
-## Stack (Python + Node/Next.js + PostgreSQL)
+## Stack (Python + Angular + PostgreSQL)
 - **services/api**: Python 3.12, FastAPI, Pydantic, SQLAlchemy 2 + Alembic, `pgvector`, `httpx`, `google-genai` (Gemini), `pypdf`, pytest.
-- **apps/web**: Next.js (App Router) + TypeScript + Tailwind. My strongest area, so keep explanations short here.
+- **apps/web**: Angular 22 (standalone components, signals, zoneless, OnPush, SCSS) + TypeScript, Angular CLI, Vitest. I'm learning Angular: explain every new Angular concept by comparing it to React.
 - **PostgreSQL 16 + pgvector** in Docker (`pgvector/pgvector` image). `docker-compose.yml` runs db + api + web.
-- **FastAPI is the ONLY service that touches the database.** Next.js calls FastAPI through a Next.js route handler (proxy).
+- **FastAPI is the ONLY service that touches the database.** Angular calls FastAPI with `HttpClient` / `httpResource` under `/api`. In development, the Angular dev server forwards `/api` to FastAPI with `proxy.conf.json` (no CORS needed). In docker-compose, nginx serves the Angular build and forwards `/api` to the api service.
+- TypeScript types for API responses are generated from FastAPI's OpenAPI schema (`openapi-typescript`) into one file. Never write API types by hand.
 - Gemini: key in `.env` as `GEMINI_API_KEY` (never committed; ship `.env.example`). Google retires model names often: first write a script that lists the available models, then keep the chat and embedding model names in ONE config place. Embeddings with `output_dimensionality=768` → `vector(768)` + HNSW index.
 - All Gemini calls go through ONE module (`llm.py`) that logs every call, rate-limits, retries, and can be swapped for a `FakeLLM` in tests.
 - Email: Gmail API with OAuth (scope `gmail.send` only) from my own account. Tokens stored locally in a git-ignored file. Check the current Google docs for the setup steps before writing them.
+
+## Angular rules
+- **Modern Angular only:** standalone components, `signal()`, `computed()`, `effect()`, `linkedSignal()`, `input()`/`output()`/`model()`, `inject()`, `@if`/`@for`/`@switch`/`@defer`, `httpResource`, Signal Forms, lazy-loaded routes.
+- No NgModules, `*ngIf`/`*ngFor` or constructor injection in my code. But every `LEARNING.md` entry shows the old way in one line, because interviews and older codebases still use it.
+- **Feature folders** in `apps/web/src/app`:
+  - `core/`: api client, interceptors, guards
+  - `shared/`: reusable UI components, pipes, directives
+  - `features/today`, `features/drafts`, `features/applications`, `features/cv`, `features/stats`
+- **No UI component library at first:** I build the reusable components myself (modal, table, chips). Angular CDK is allowed (drag-drop for the board).
+- **Learning goal:** by the end I want advanced Angular knowledge. The web part must cover, step by step: components and templates, pipes, lifecycle hooks, signals, services and DI (providers, `InjectionToken`), routing (lazy loading, route params with input binding, guards, resolvers), `HttpClient` + interceptors + global error handling, RxJS (`switchMap`, `debounceTime`, `combineLatest`, `takeUntilDestroyed`, `toSignal`), Reactive Forms and Signal Forms (custom validators, `FormArray`), content projection and `ng-template`, custom directives, CDK drag-drop, change detection (OnPush, zoneless), `@defer`, NgRx SignalStore, testing with Vitest.
+- **No auth for now** (see W9). Learn guards and interceptors through real uses: a guard that blocks Draft review when no CV is uploaded; interceptors for the `/api` base URL, a loading indicator and global error handling.
 
 ## Job data sources (free, legal)
 Official public APIs only. NO scraping, and NO bots that fill in application forms on LinkedIn, Indeed or company sites.
@@ -124,7 +144,7 @@ Extract `apply_email` only if it is written in the posting. Never guess or build
 - `GET /applications`, `PATCH /applications/{id}` (status, notes)
 - `POST /admin/run-daily`, `GET /admin/stats` (jobs per source, ingest runs, LLM calls, tokens, estimated cost)
 
-## Web (Next.js)
+## Web (Angular)
 - **Today**: new matches and the draft queue (the main screen).
 - **Draft review**: described in F.
 - **Applications**: board by status, follow-ups due.
@@ -133,23 +153,37 @@ Extract `apply_email` only if it is written in the posting. Never guess or build
 
 ## Tests and CI
 - pytest with `FakeLLM` and a fake email sender (no API keys needed): normalisation from saved fixtures, dedupe, skill aliases, RRF, scoring, grounding, draft guard-rails, and the send rules (refuses unapproved drafts, refuses a second send for the same job, respects dry-run and the daily cap).
-- GitHub Actions on push/PR: ruff + pytest (Postgres+pgvector service) + `npm run lint` + `npm run build`.
+- Angular tests (Vitest): services with `HttpTestingController`, the CV guard, and the Draft review page (one draft id per send, no "send all").
+- GitHub Actions on push/PR: ruff + pytest (Postgres+pgvector service) + `ng lint` (angular-eslint) + `ng test` (Vitest) + `ng build`, run in `apps/web`.
 
 ## Order of steps
-0. Repo skeleton, docker-compose, `.gitignore`, `.env.example`, model-list script, empty `LEARNING.md`.
-1. FastAPI + DB + first migration.
-2. Fetchers + dedupe + ingest runs.
-3. `llm.py` + enrichment (incl. `location_rule`, `apply_email`).
+**Backend**
+0. ✅ Done: Repo skeleton, docker-compose, `.gitignore`, `.env.example`, model-list script, empty `LEARNING.md`.
+1. ✅ Done: FastAPI + DB + first migration.
+2. ✅ Done: Fetchers + dedupe + ingest runs.
+3. ✅ Done: `llm.py` + enrichment (incl. `location_rule`, `apply_email`).
 4. Embeddings + pgvector + full-text search.
 5. CV upload → profile.
 6. Matching: stage 1 (RRF) then stage 2 (judge + grounding + score in code).
 7. Drafting + draft guard-rails.
-8. Next.js: Today, Draft review, CV pages.
+8. Frontend: see the Angular track (W0-W9) below.
 9. Gmail OAuth + send (dry-run first, then live with one test email to myself).
 10. Applications board + follow-ups.
 11. Daily command + scheduling.
 12. Tests + GitHub Actions.
 13. README (problem, architecture diagram, screenshots, how to run, design decisions, cost per month, what I'd improve), a 60-second pitch, and the 5 hardest interview questions about this project.
+
+**Angular track (W0-W9)**, runs in parallel with the backend steps. It starts now with mock data shaped like the API schemas and switches to the real API as each endpoint is built.
+- **W0**: Angular setup in `apps/web`. If I've already run `ng new` there, check it. If an old Next.js scaffold exists, show me and ask before deleting. Add `proxy.conf.json` and the folder structure.
+- **W1**: Components and templates: Today page with mock matches (cards, pipes, `@if`/`@for`, `input`/`output`, lifecycle hooks).
+- **W2**: Signals, services, DI: a matches service, filters, computed values.
+- **W3**: Router + HttpClient: every page as a lazy route, `/api/health`, interceptors, the CV guard, generated API types.
+- **W4**: Forms: CV skill-chips editor and draft editor (Signal Forms + Reactive Forms, validators for the length limits).
+- **W5**: RxJS: filters with debounce, autosave of draft edits.
+- **W6**: Advanced components: reusable modal, chips and table with content projection and `ng-template`; a custom directive; Applications board with CDK drag-drop.
+- **W7**: Performance and state: OnPush/zoneless check, `@defer`, NgRx SignalStore for the draft queue, Stats page.
+- **W8**: Angular tests + CI.
+- **W9** (reminder, not built yet): JWT auth. When W8 is done, remind me that JWT auth (login, token storage, auth interceptor, auth guard) is still not learned, and offer to add it.
 
 ## Don't
 - Don't send any email without my click on that draft. Don't add auto-send.
