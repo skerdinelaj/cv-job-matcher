@@ -100,3 +100,31 @@ One entry per step, in simple words.
 - **Data migration:** a migration that changes rows (data), not tables (structure).
 - **HTML entity:** a code like `&amp;` that means `&` inside HTML.
 - **Why the migration copies code instead of importing it:** a migration must do the same thing forever, even if the app code changes later.
+
+## Refactor: folder structure (where everything lives)
+**The idea:** We moved the code into one folder per pipeline step (`ingest/`, `enrich/`, later `embed/`, `match/`, `draft/`...) plus a few shared folders. Nothing changed in what the code does; only where it lives.
+
+**The map (`services/api/app/`):**
+- `main.py`: creates the FastAPI app and plugs in the routes from `api/`.
+- `core/`: plumbing used everywhere: `config.py` (settings from `.env`), `db.py` (database connection), `llm.py` (the one LLM gateway).
+- `models/`: database tables by topic: `jobs.py` (Job, JobEnrichment), `logs.py` (IngestRun, LLMCall). `__init__.py` imports them all.
+- `shared/`: small pure helpers: `text.py`, `skills.py`.
+- `ingest/` (Step A, `python -m app.ingest`): `run.py` (the loop), `dedupe.py` (content_hash), `fetchers/` (one file per source).
+- `enrich/` (Step B, `python -m app.enrich`): `run.py` (the loop), `schema.py` (the form), `prompts.py`, `prefilter.py`, `batch.py`, `guardrails.py`.
+- `api/`: HTTP routes, one file per area (`health.py` now), plus `deps.py` (shared `DbSession`).
+
+**Rule of thumb:** "Which step is this for?" → that step's folder. "Is it used by many steps?" → `core/` (plumbing) or `shared/` (small helpers). "Is it a table?" → `models/`.
+
+**Like in JavaScript:**
+- Feature folders ≈ grouping by feature in a Next.js/React app instead of by file type.
+- `models/__init__.py` re-exporting tables ≈ an `index.ts` barrel file.
+- `__main__.py` ≈ the `"main"`/`bin` entry of a package: `python -m app.enrich` runs it.
+- FastAPI `APIRouter` ≈ `express.Router()`.
+
+**Why this way:** Each file has one job and a name that says it, so I can find things fast. Trade-off: more files, and you jump between them a bit more.
+
+**Words to know:**
+- **Package:** a folder of Python files with an `__init__.py`; you import from it like a module.
+- **`__main__.py`:** the file Python runs when you run a package with `python -m`.
+- **Refactor:** changing how code is organised without changing what it does.
+- **Router:** a group of related API routes that the app plugs in.

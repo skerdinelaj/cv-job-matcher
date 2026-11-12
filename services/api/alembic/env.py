@@ -6,8 +6,8 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app import models  # noqa: F401  (import so every table registers on Base.metadata)
-from app.config import settings
-from app.db import Base
+from app.core.config import settings
+from app.core.db import Base
 
 config = context.config
 

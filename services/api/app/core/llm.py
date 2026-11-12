@@ -19,8 +19,8 @@ from google import genai
 from google.genai import errors, types
 from pydantic import BaseModel
 
-from app.config import settings
-from app.db import SessionLocal
+from app.core.config import settings
+from app.core.db import SessionLocal
 from app.models import LLMCall
 
 logger = logging.getLogger(__name__)

@@ -9,8 +9,8 @@ candidate_required_location, description (HTML), salary, ...} ], ...}
 from datetime import UTC, datetime
 from typing import Any
 
-from app.fetchers.base import Fetcher, RawJob
-from app.text import html_to_text
+from app.ingest.fetchers.base import Fetcher, RawJob
+from app.shared.text import html_to_text
 
 
 def _parse_date(value: str | None) -> datetime | None:

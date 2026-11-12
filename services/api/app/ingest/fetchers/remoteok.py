@@ -9,8 +9,8 @@ Text often arrives double-encoded ("â€”"), so we repair it with fix_mojibak
 from datetime import UTC, datetime
 from typing import Any
 
-from app.fetchers.base import Fetcher, RawJob
-from app.text import fix_mojibake, html_to_text
+from app.ingest.fetchers.base import Fetcher, RawJob
+from app.shared.text import fix_mojibake, html_to_text
 
 
 class RemoteOKFetcher(Fetcher):

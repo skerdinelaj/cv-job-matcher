@@ -3,27 +3,15 @@
 Run from services/api:  python -m app.ingest
 """
 
-import hashlib
 from datetime import UTC, datetime
 
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.db import SessionLocal
-from app.fetchers import ALL_FETCHERS, Fetcher, RawJob
+from app.core.db import SessionLocal
+from app.ingest.dedupe import content_hash
+from app.ingest.fetchers import ALL_FETCHERS, Fetcher, RawJob
 from app.models import IngestRun, Job
-from app.text import normalise_for_hash
-
-
-def content_hash(job: RawJob) -> str:
-    """Fingerprint of a job: company + title, normalised.
-
-    Same company + same title = same job, even if it comes again tomorrow
-    or from another source. (Trade-off: the same title for two countries
-    counts as one job.)
-    """
-    key = f"{normalise_for_hash(job.company or '')}|{normalise_for_hash(job.title)}"
-    return hashlib.sha256(key.encode("utf-8")).hexdigest()  # 64 hex characters
 
 
 def save_jobs(db: Session, jobs: list[RawJob]) -> int:
@@ -82,8 +70,3 @@ def main() -> None:
                 )
             else:
                 print(f"{run.source:<10} FAILED: {run.error}")
-
-
-# Runs only when started as a program (python -m app.ingest), not when imported
-if __name__ == "__main__":
-    main()

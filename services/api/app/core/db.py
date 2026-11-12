@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-from app.config import settings
+from app.core.config import settings
 
 # The engine holds a pool of connections to Postgres (create once, reuse everywhere).
 # pool_pre_ping: check a connection is alive before using it.

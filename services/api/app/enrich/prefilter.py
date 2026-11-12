@@ -4,10 +4,35 @@ Why: the free Gemini tier allows only ~20 requests per day. Many jobs are
 obviously out for me (posting written in German, or "USA only"), so we
 record that directly and save the LLM for jobs that might fit.
 
-Every function here is pure (text in, answer out): easy to test.
+The detection functions are pure (text in, answer out): easy to test.
 """
 
 import re
+
+from app.enrich.schema import JobProfile, LocationRule
+from app.models import Job
+
+PREFILTER_MODEL = "prefilter"  # stored in job_enrichment.model when code decided, not the LLM
+
+
+def prefilter(job: Job) -> JobProfile | None:
+    """Decide obvious jobs in code. Returns a profile, or None = "ask the LLM"."""
+    if location_is_outside_reach(job.location):
+        return _empty_profile(location_rule="country_restricted")
+    if detect_german(job.description):
+        # Posting written in German -> German is needed. I don't speak it, so the
+        # language filter in matching will drop it. We don't extract skills for it.
+        return _empty_profile(location_rule="unclear", languages=["German"])
+    return None
+
+
+def _empty_profile(location_rule: LocationRule, languages: list[str] | None = None) -> JobProfile:
+    return JobProfile(
+        skills=[], must_have=[], nice_to_have=[], seniority=None, years_required=None,
+        languages_required=languages or [], location_rule=location_rule,
+        apply_email=None, salary_text=None,
+    )  # fmt: skip
+
 
 # --- 1. Posting language ---------------------------------------------------
 # Small, very common words. A German posting is full of "und", "wir", "mit"...

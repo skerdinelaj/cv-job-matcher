@@ -1,22 +1,13 @@
-"""The FastAPI app. Run with:  uvicorn app.main:app --reload"""
+"""The FastAPI app. Run with:  uvicorn app.main:app --reload
 
-from typing import Annotated
+This file only creates the app and plugs in the routers from app/api/.
+Each area (health, cvs, drafts, ...) has its own file there.
+"""
 
-from fastapi import Depends, FastAPI
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+from fastapi import FastAPI
 
-from app.db import get_db
+from app.api import health
 
 app = FastAPI(title="JobMatch API")
 
-# A type alias: "a Session that FastAPI gets from get_db()".
-# FastAPI calls get_db for each request and passes the result in (dependency injection).
-DbSession = Annotated[Session, Depends(get_db)]
-
-
-@app.get("/health")
-def health(db: DbSession) -> dict[str, str]:
-    """Is the API up, and can it talk to the database?"""
-    db.execute(text("SELECT 1"))  # fails with an error if Postgres is unreachable
-    return {"status": "ok", "database": "ok"}
+app.include_router(health.router)

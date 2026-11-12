@@ -1,7 +1,7 @@
 """All settings in one typed object, read from the repo-root .env file.
 
 Usage anywhere in the app:
-    from app.config import settings
+    from app.core.config import settings
     settings.database_url
 """
 
@@ -10,8 +10,8 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# services/api/app/config.py -> up 3 folders = repo root
-ROOT_DIR = Path(__file__).resolve().parents[3]
+# services/api/app/core/config.py -> up 4 folders = repo root
+ROOT_DIR = Path(__file__).resolve().parents[4]
 
 
 class Settings(BaseSettings):

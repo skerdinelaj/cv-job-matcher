@@ -7,8 +7,8 @@ url, location, created_at (unix seconds), ...} ], "links": ..., "meta": ...}
 from datetime import UTC, datetime
 from typing import Any
 
-from app.fetchers.base import Fetcher, RawJob
-from app.text import html_to_text
+from app.ingest.fetchers.base import Fetcher, RawJob
+from app.shared.text import html_to_text
 
 
 class ArbeitnowFetcher(Fetcher):
