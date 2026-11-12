@@ -92,3 +92,11 @@ One entry per step, in simple words.
 - **Fixture:** a saved sample of real data used in tests, so tests don't need the network.
 - **Mojibake:** garbled characters caused by reading text with the wrong encoding.
 
+
+### Fix: "&amp;" in job titles (data migration)
+**The idea:** Some sources send `&amp;` instead of `&`. We now decode it in ONE place (a validator on `RawJob`), and a **data migration** cleaned the 6 rows already saved and recomputed their fingerprint, so the next ingest doesn't treat them as new jobs.
+**Like in JavaScript:** a Pydantic `field_validator` ≈ a zod `.transform()` on a field.
+**Words to know:**
+- **Data migration:** a migration that changes rows (data), not tables (structure).
+- **HTML entity:** a code like `&amp;` that means `&` inside HTML.
+- **Why the migration copies code instead of importing it:** a migration must do the same thing forever, even if the app code changes later.

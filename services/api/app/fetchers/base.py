@@ -1,11 +1,12 @@
 """The shared shape of a job (RawJob) and the interface every fetcher follows."""
 
+import html
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 # A generic, honest User-Agent. No personal details.
 USER_AGENT = "JobMatch/0.1 (personal job search tool)"
@@ -22,6 +23,17 @@ class RawJob(BaseModel):
     location: str | None
     description: str  # plain text, no HTML
     posted_at: datetime | None
+
+    @field_validator("title", "company", "location")
+    @classmethod
+    def decode_html_codes(cls, value: str | None) -> str | None:
+        """Sources send "&amp;" instead of "&" in short fields. Fix it for ALL sources here.
+
+        Runs automatically every time a RawJob is created (like a zod .transform()).
+        """
+        if value is None:
+            return None
+        return " ".join(html.unescape(value).split())  # also trims extra spaces
 
 
 class Fetcher(ABC):
