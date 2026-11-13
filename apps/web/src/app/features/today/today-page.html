@@ -2,16 +2,47 @@
   <header class="today__header">
     <h2>Today</h2>
     <p>
-      {{ today | date: 'EEEE d MMMM' }} · {{ matches().length }}
-      {{ matches().length === 1 ? 'match' : 'matches' }}
+      {{ today | date: 'EEEE d MMMM' }} · {{ visibleMatches().length }} of {{ totalCount() }}
+      {{ totalCount() === 1 ? 'match' : 'matches' }}
     </p>
   </header>
 
+  <div class="filters">
+    <label class="filters__item">
+      Min score: <strong>{{ minScore() }}</strong>
+      <!-- [value] sets the input from the signal; (input) updates the signal on every move -->
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="5"
+        [value]="minScore()"
+        (input)="onMinScoreInput($event)"
+      />
+    </label>
+
+    <label class="filters__item">
+      <input type="checkbox" [checked]="emailOnly()" (change)="toggleEmailOnly()" />
+      Email jobs only
+    </label>
+
+    <button type="button" class="filters__reset" (click)="resetFilters()">Reset</button>
+  </div>
+
+  @if (hiddenCount() > 0) {
+    <p class="today__hidden">{{ hiddenCount() }} hidden by filters</p>
+  }
+
   <!-- [match] passes the input, (skip) listens to the output; $event is the emitted id -->
-  @for (match of matches(); track match.id) {
+  @for (match of visibleMatches(); track match.id) {
     <app-match-card [match]="match" (skip)="onSkip($event)" />
   } @empty {
-    <!-- @empty renders when the list is empty -->
-    <p class="today__empty">No matches left. Come back after the next daily run.</p>
+    <p class="today__empty">
+      @if (totalCount() === 0) {
+        No matches left. Come back after the next daily run.
+      } @else {
+        No matches with these filters.
+      }
+    </p>
   }
 </section>

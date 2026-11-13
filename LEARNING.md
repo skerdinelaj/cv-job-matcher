@@ -209,3 +209,40 @@ One entry per step, in simple words.
 - **`ng build`:** makes the production version in `dist/`; stricter than `ng serve`. Run test + build before each commit.
 
 **Check yourself:** Why do we log `this.match().id` in `ngOnInit` and not in the constructor?
+
+## Step W2: Signals, services and DI
+**The idea:** The matches now live in a service: a class Angular creates once and shares with every component that asks for it. Components get it with `inject()`. The Today page keeps its filter values in signals, and the visible list is a `computed()` that updates by itself when a filter or the data changes.
+
+**What we built:**
+- `features/today/matches.service.ts`: holds the matches in a private signal, exposes a read-only `matches` and a `count`, and has `skip()`. Only the service changes the data.
+- `features/today/today.tokens.ts`: `DEFAULT_MIN_SCORE`, an InjectionToken with a default of 70 (can be overridden in `app.config.ts`).
+- `features/today/today-page.ts`: injects the service and the token; `minScore` and `emailOnly` signals; `visibleMatches` and `hiddenCount` as `computed()`; an `effect()` that logs filter changes.
+- `features/today/today-page.html` / `.scss`: the filter bar (slider, "Email jobs only", Reset) and the "N hidden by filters" line.
+
+**Like in React:**
+- `signal(0)` ≈ `useState(0)`. Read: `count()` (not `count`). Write: `count.set(1)` or `count.update(c => c + 1)`.
+- `computed(() => a() + b())` ≈ `useMemo(() => a + b, [a, b])`, but Angular finds the dependencies itself.
+- `effect(() => console.log(a()))` ≈ `useEffect(() => console.log(a), [a])`, again without a dependency array.
+- A service with `providedIn: 'root'` ≈ a Zustand store, or a Context + custom hook, without a `<Provider>` wrapper.
+- `inject(MatchesService)` ≈ `useMatchesStore()` / `useContext(MatchesContext)`.
+- `asReadonly()` ≈ exporting only the state from a store, not the setter.
+- InjectionToken ≈ `createContext(defaultValue)` for a plain value like a number or config.
+
+**Old way:** `constructor(private matchesService: MatchesService) {}` (constructor injection), and shared state as an RxJS `BehaviorSubject` read in templates with `| async`.
+
+**Why this way:** The data lives in one place (the service) and the page only keeps UI state (the filters), so other pages can reuse the data and the API can replace the mock later without touching components. Trade-off: one more file, and you must remember that only the service is allowed to change the list.
+
+**Interview line:** "Shared state lives in a root-provided service that exposes read-only signals; components derive what they show with `computed()`, and side effects like logging go in `effect()`, never state syncing."
+
+**Words to know:**
+- **Signal:** a value that notifies Angular when it changes; read it by calling it, like `minScore()`.
+- **Computed signal:** a read-only signal calculated from other signals, cached until one of them changes.
+- **Effect:** code that re-runs when the signals it reads change; only for side effects.
+- **Service:** a class that holds shared logic or state, outside any component.
+- **Dependency injection (DI):** Angular creates objects and hands them to whoever asks, instead of you calling `new`.
+- **Singleton:** only one instance exists for the whole app (`providedIn: 'root'`).
+- **Provider:** a rule that tells Angular how to create something for injection (`useValue`, `useClass`, `useFactory`).
+- **InjectionToken:** a key for injecting a value that is not a class.
+- **Injection context:** the places where `inject()` and `effect()` are allowed: field initializers and the constructor.
+
+**Check yourself:** Why is `visibleMatches` a `computed()` and not a `signal()` that an `effect()` keeps up to date?
