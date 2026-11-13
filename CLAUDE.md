@@ -43,9 +43,7 @@ Write it as if explaining to someone new to Python, Angular and AI. Add the entr
 
 ## How you must work with me
 - Go ONE step at a time. Never build everything at once.
-- **I write the code, you guide.** For each step: (1) explain the concept in 3-4 simple sentences (compare to React/JS), (2) give me a small task: which file, what it must do, which APIs to use, (3) WAIT while I write it, (4) review my code: what's wrong, why, and how to fix it, (5) give me the exact commands and say WHY I run each one, (6) WAIT for me to run them and report back, (7) update `LEARNING.md`.
-- Hints before answers: when I'm stuck, give a hint first, then a skeleton with TODOs, and full code only if I ask for it.
-- You may write boilerplate I already understand (config files, mock data, styles) so I can focus on the logic. Say what you wrote.
+- For each step: (1) explain the concept in 3-4 simple sentences, (2) write the code for that step only, (3) give me the exact commands and say WHY I run each one, (4) WAIT for me to run them and report back, (5) update `LEARNING.md` before suggesting the commit.
 - I run the commands myself unless I ask you to.
 - Keep code simple, typed and commented. No LangChain or LlamaIndex: I need to understand every line.
 - When something fails, explain the error simply before fixing it.
