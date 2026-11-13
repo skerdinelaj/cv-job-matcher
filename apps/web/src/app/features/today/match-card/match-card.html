@@ -1,0 +1,74 @@
+<!-- @let = a local template variable, so we don't repeat match().job everywhere -->
+@let job = match().job;
+
+<article class="card">
+  <header class="card__header">
+    <div>
+      <h3 class="card__title">{{ job.title }}</h3>
+      <!-- ?? works in templates like in TS -->
+      <p class="card__meta">{{ job.company }} · {{ job.location ?? 'Location not stated' }}</p>
+    </div>
+
+    <!-- [class.x]="condition" adds the class only when the condition is true -->
+    <div
+      class="score"
+      [class.score--strong]="match().score >= 85"
+      [class.score--weak]="match().score < 70"
+    >
+      <span class="score__value">{{ match().score }}</span>
+      <!-- custom pipe from shared/pipes -->
+      <span class="score__label">{{ match().score | scoreLabel }}</span>
+    </div>
+  </header>
+
+  <p class="card__why">{{ match().why_text }}</p>
+
+  <div class="card__skills">
+    <!-- @for needs "track": a unique key, like key={...} in React -->
+    @for (skill of match().matched_skills; track skill) {
+      <span class="chip chip--met">{{ skill }}</span>
+    }
+    @for (skill of match().missing_skills; track skill) {
+      <span class="chip chip--missing">{{ skill }}</span>
+    }
+  </div>
+
+  <footer class="card__footer">
+    <!-- @switch = a switch statement in the template -->
+    @switch (job.location_rule) {
+      @case ('worldwide') {
+        <span class="tag">Worldwide</span>
+      }
+      @case ('europe') {
+        <span class="tag">Europe OK</span>
+      }
+      @case ('country_restricted') {
+        <span class="tag tag--warn">Country restricted</span>
+      }
+      @default {
+        <span class="tag tag--warn">Location unclear</span>
+      }
+    }
+
+    <!-- @if / @else replaces {cond ? <A/> : <B/>} -->
+    @if (job.apply_email) {
+      <span class="tag">Email job</span>
+    } @else {
+      <span class="tag">Form job</span>
+    }
+
+    @if (job.posted_at) {
+      <!-- built-in pipe: formats an ISO string as a date -->
+      <span class="card__date">Posted {{ job.posted_at | date: 'd MMM' }}</span>
+    }
+
+    <span class="card__spacer"></span>
+
+    <!-- [href]="..." = property binding, like href={...} in JSX -->
+    <a class="link" [href]="job.url" target="_blank" rel="noopener">
+      View on {{ job.source | titlecase }}
+    </a>
+    <!-- (click)="..." = event binding, like onClick={...} -->
+    <button type="button" class="button" (click)="onSkip()">Skip</button>
+  </footer>
+</article>

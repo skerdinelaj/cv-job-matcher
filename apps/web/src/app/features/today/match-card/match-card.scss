@@ -1,0 +1,110 @@
+// Styles here apply ONLY to this component (Angular scopes them automatically,
+// like CSS Modules in React).
+:host {
+  display: block;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: grid;
+  gap: 12px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  &__meta,
+  &__why,
+  &__date {
+    margin: 4px 0 0;
+    color: #5b6470;
+    font-size: 0.9rem;
+  }
+
+  &__skills,
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__spacer {
+    flex: 1;
+  }
+}
+
+.score {
+  text-align: right;
+  white-space: nowrap;
+  color: #8a6d00;
+
+  &--strong {
+    color: #1a7f37;
+  }
+
+  &--weak {
+    color: #b42318;
+  }
+
+  &__value {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+  }
+}
+
+.chip,
+.tag {
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+}
+
+.chip--met {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.chip--missing {
+  background: #fee2e2;
+  color: #7f1d1d;
+  text-decoration: line-through;
+}
+
+.tag {
+  background: #eef1f4;
+  color: #374151;
+
+  &--warn {
+    background: #fef3c7;
+    color: #78350f;
+  }
+}
+
+.link {
+  color: #2457c5;
+  font-size: 0.9rem;
+}
+
+.button {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px 12px;
+  cursor: pointer;
+}

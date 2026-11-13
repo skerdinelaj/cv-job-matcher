@@ -165,3 +165,47 @@ One entry per step, in simple words.
 - **CORS:** a browser rule that blocks calls to a different address unless that server allows them.
 
 **Check yourself:** If the Angular app calls `/api/matches`, which URL does FastAPI actually receive, and why?
+
+## Step W1: Components and templates
+**The idea:** An Angular component is a class (the logic) plus a template (the HTML) plus styles. A parent passes data down with inputs and listens to events with outputs, like props and callback props in React. Templates use `@if`, `@for` and `@switch` blocks, and pipes format values right inside `{{ }}`.
+
+**What we built:**
+- `features/today/match.model.ts`: a temporary `Match` type shaped like the planned `GET /matches` response (replaced by generated types in W3).
+- `features/today/mock-matches.ts`: 3 fake matches to build the UI before the API exists.
+- `shared/pipes/score-label.pipe.ts`: a custom pipe: `{{ 91 | scoreLabel }}` → "Strong match".
+- `features/today/match-card/`: one card per match: `input.required<Match>()`, a `skip` output, `ngOnInit`/`ngOnDestroy` logs.
+- `features/today/today-page.*`: the list of cards with `@for … @empty`; Skip hides a card (UI only for now).
+- `app.ts`/`app.html`: the top bar + the Today page (the router replaces this in W3).
+
+**Like in React:**
+- `readonly match = input.required<Match>()` ≈ `function MatchCard({ match }: { match: Match })`. You read it as `match()`.
+- `readonly skip = output<number>()` + `this.skip.emit(id)` ≈ an `onSkip(id)` callback prop.
+- `<app-match-card [match]="m" (skip)="onSkip($event)" />` ≈ `<MatchCard match={m} onSkip={onSkip} />`.
+- `@for (m of matches(); track m.id) {…} @empty {…}` ≈ `matches.length ? matches.map(m => <X key={m.id} />) : <Empty />`.
+- `@if (a) {…} @else {…}` ≈ `{a ? <A /> : <B />}`.
+- `@let job = match().job;` ≈ `const job = match.job;` at the top of a component.
+- `[class.score--strong]="score >= 85"` ≈ `className={clsx({ 'score--strong': score >= 85 })}`.
+- Pipe `{{ date | date: 'd MMM' }}` ≈ calling `format(date, 'd MMM')` inside JSX.
+- `ngOnInit` + `ngOnDestroy` ≈ `useEffect(() => { … ; return () => cleanup }, [])`.
+- Component `.scss` scoped to the component ≈ CSS Modules.
+
+**Old way:** `@Input() match!: Match;` and `@Output() skip = new EventEmitter<number>();` with `*ngIf="..."`, `*ngFor="let m of matches; trackBy: fn"` and `[ngSwitch]`, and the component declared in an NgModule.
+
+**Why this way:** The card only displays data and emits events; the page owns the list. This "presentational vs container" split keeps the card reusable and easy to test. Trade-off: one more file and passing data through inputs instead of reading it directly.
+
+**Interview line:** "I split the Today page into a container that owns the state and a presentational card with signal inputs and outputs, using the new control-flow blocks and a pure custom pipe for display logic."
+
+**Words to know:**
+- **Template:** the HTML of a component, with Angular syntax for data and events.
+- **Interpolation `{{ }}`:** shows a value as text.
+- **Property binding `[x]="..."`:** sets an element property or a component input from an expression.
+- **Event binding `(x)="..."`:** runs code when an event (or a component output) fires; `$event` is its value.
+- **Control flow (`@if`, `@for`, `@switch`):** template blocks for conditions, lists and switches.
+- **`track`:** the unique key for each `@for` item, so Angular updates only the items that changed.
+- **Pipe:** a small function used in templates to format a value; "pure" pipes run again only when the input changes.
+- **Lifecycle hook:** a method Angular calls at a set moment (`ngOnInit` after inputs are set, `ngOnDestroy` before removal).
+- **`:host`:** in component styles, the component's own element (`<app-match-card>`).
+- **`ng test --watch=false`:** runs the unit tests once and exits (without the flag it re-runs on every save).
+- **`ng build`:** makes the production version in `dist/`; stricter than `ng serve`. Run test + build before each commit.
+
+**Check yourself:** Why do we log `this.match().id` in `ngOnInit` and not in the constructor?

@@ -1,0 +1,17 @@
+<section class="today">
+  <header class="today__header">
+    <h2>Today</h2>
+    <p>
+      {{ today | date: 'EEEE d MMMM' }} · {{ matches().length }}
+      {{ matches().length === 1 ? 'match' : 'matches' }}
+    </p>
+  </header>
+
+  <!-- [match] passes the input, (skip) listens to the output; $event is the emitted id -->
+  @for (match of matches(); track match.id) {
+    <app-match-card [match]="match" (skip)="onSkip($event)" />
+  } @empty {
+    <!-- @empty renders when the list is empty -->
+    <p class="today__empty">No matches left. Come back after the next daily run.</p>
+  }
+</section>
