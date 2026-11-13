@@ -1,15 +1,23 @@
 import { Component } from '@angular/core';
-import { TodayPage } from './features/today/today-page';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 /**
- * The root component (rendered into <app-root> in index.html).
- * For now it shows the Today page directly; in W3 the router takes over
- * and this becomes the layout with a <router-outlet />.
+ * The root component = the app layout: top bar + nav + the current page.
+ * <router-outlet /> is where the router renders the page for the current URL.
  */
 @Component({
   selector: 'app-root',
-  imports: [TodayPage],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {}
+export class App {
+  // The nav items, so the template can loop over them with @for.
+  protected readonly navItems = [
+    { path: '/today', label: 'Today' },
+    { path: '/drafts', label: 'Drafts' },
+    { path: '/applications', label: 'Applications' },
+    { path: '/cv', label: 'CV' },
+    { path: '/stats', label: 'Stats' },
+  ];
+}

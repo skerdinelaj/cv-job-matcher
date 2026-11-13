@@ -1,7 +1,18 @@
 <header class="topbar">
   <h1>JobMatch</h1>
+
+  <nav class="nav">
+    @for (item of navItems; track item.path) {
+      <!-- routerLink = client-side navigation (no page reload), like <Link to> in React Router.
+           routerLinkActive adds the class when this link's route is the current one. -->
+      <a class="nav__link" [routerLink]="item.path" routerLinkActive="nav__link--active">
+        {{ item.label }}
+      </a>
+    }
+  </nav>
 </header>
 
 <main class="content">
-  <app-today-page />
+  <!-- The page for the current URL renders here -->
+  <router-outlet />
 </main>

@@ -1,4 +1,7 @@
 .topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
   background: #111827;
   color: #fff;
   padding: 12px 24px;
@@ -6,6 +9,28 @@
   h1 {
     margin: 0;
     font-size: 1.2rem;
+  }
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  &__link {
+    color: #cbd5e1;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+
+    &:hover {
+      color: #fff;
+    }
+
+    &--active {
+      color: #fff;
+      background: #374151;
+    }
   }
 }
 

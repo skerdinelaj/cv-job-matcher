@@ -1,10 +1,13 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      // App uses routerLink and <router-outlet>, so the test needs a router (no routes needed).
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 

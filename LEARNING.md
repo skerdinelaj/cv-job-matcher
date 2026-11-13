@@ -246,3 +246,41 @@ One entry per step, in simple words.
 - **Injection context:** the places where `inject()` and `effect()` are allowed: field initializers and the constructor.
 
 **Check yourself:** Why is `visibleMatches` a `computed()` and not a `signal()` that an `effect()` keeps up to date?
+
+## Step W3.1: Router and lazy-loaded pages
+**The idea:** The router picks which page to show from the URL. Routes are a list in `app.routes.ts`, and the current page renders inside `<router-outlet />`. Each page is lazy-loaded, so its code downloads only when you first open it, and a route parameter like `/drafts/:id` arrives in the page as an input.
+
+**What we built:**
+- `app.routes.ts`: `''` → redirect to `/today`; 6 lazy pages with a tab `title`; `drafts/:id`; a `'**'` not-found route (last).
+- `app.config.ts`: `provideRouter(routes, withComponentInputBinding())` so route params become inputs.
+- `app.ts` / `app.html` / `app.scss`: the layout: nav with `routerLink` + `routerLinkActive`, and `<router-outlet />`.
+- `features/drafts/drafts-page.ts`: placeholder list linking to `/drafts/1` and `/drafts/2`.
+- `features/drafts/draft-review-page.ts`: reads `:id` with `input.required({ transform: numberAttribute })`.
+- `features/applications|cv|stats/*-page.ts`, `shared/not-found-page/`: placeholder pages.
+- `app.spec.ts`: adds `provideRouter([])`, because `App` now uses router directives.
+
+**Like in React:**
+- `Routes` array ≈ `createBrowserRouter([...])` in React Router.
+- `<router-outlet />` ≈ `<Outlet />`.
+- `routerLink="/today"` ≈ `<Link to="/today">`; `routerLinkActive="active"` ≈ `<NavLink>` with an active class.
+- `loadComponent: () => import('./x').then(m => m.X)` ≈ `const X = React.lazy(() => import('./x'))`.
+- `id = input.required(...)` filled from `/drafts/:id` ≈ `const { id } = useParams()`, but it arrives as a prop.
+- `{ path: '**' }` ≈ `{ path: '*' }` (the catch-all route).
+
+**Old way:** `RouterModule.forRoot(routes)` inside an `AppModule`, `loadChildren: () => import('./x.module').then(m => m.XModule)` for lazy modules, and reading params with `this.route.paramMap.subscribe(...)` from an injected `ActivatedRoute`.
+
+**Why this way:** Lazy routes keep the first download small (each page is its own chunk), and input binding means a page doesn't need to know about the router to get its id. Trade-off: the first visit to a page waits for one small download.
+
+**Interview line:** "Every page is a lazy-loaded standalone route, and route params are bound straight to signal inputs with `withComponentInputBinding()`, so pages stay router-agnostic and easy to test."
+
+**Words to know:**
+- **Route:** a rule that maps a URL path to a component.
+- **Router outlet:** the place in the layout where the current route's component renders.
+- **Lazy loading:** loading a page's code only when it's first needed.
+- **Chunk:** one JS file produced by the build; each lazy page gets its own.
+- **Route parameter:** a variable part of the URL, like `:id` in `/drafts/:id`.
+- **Input binding (router):** the router copies route params into component inputs with the same name.
+- **`numberAttribute`:** a built-in transform that turns a string input like `"2"` into the number `2`.
+- **Wildcard route (`**`):** matches any URL not matched before it; must be last.
+
+**Check yourself:** You skipped a card, went to Stats and came back to Today. Why is the card still gone, but the filters reset?
