@@ -128,3 +128,40 @@ One entry per step, in simple words.
 - **`__main__.py`:** the file Python runs when you run a package with `python -m`.
 - **Refactor:** changing how code is organised without changing what it does.
 - **Router:** a group of related API routes that the app plugs in.
+
+## Step W0: Angular setup
+**The idea:** We created the Angular app in `apps/web` with the Angular CLI. Angular comes with everything built in (router, HTTP client, tests, build), so there are fewer libraries to pick than in React. We also set up a dev proxy, so the app calls `/api/...` on its own address and the dev server forwards it to FastAPI.
+
+**What we built:**
+- `apps/web/` (created by `ng new`): the Angular 22 app: standalone, zoneless, SCSS, Vitest, no SSR.
+- `src/main.ts`: starts the app with `bootstrapApplication(App, appConfig)`.
+- `src/app/app.config.ts`: the app-wide "providers" (router, error listeners), like the providers you wrap around `<App />` in React.
+- `src/app/app.ts` + `app.html` + `app.scss`: the root component, split into logic, template and styles.
+- `src/app/app.routes.ts`: the list of routes (empty for now).
+- `proxy.conf.json`: sends `/api/*` to `http://localhost:8000` and removes the `/api` prefix (`/api/health` → `/health`).
+- `angular.json`: the project config (build, serve, test). We added `proxyConfig` so `ng serve` uses the proxy.
+- `src/app/core/`, `shared/`, `features/*`: empty feature folders for the next steps.
+
+**Like in React:**
+- `ng new` ≈ `npm create vite@latest`, but with router, HTTP and tests already included.
+- `ng serve` ≈ `npm run dev`. `ng build` ≈ `npm run build`. `ng test` ≈ `vitest`.
+- `bootstrapApplication(App, appConfig)` ≈ `createRoot(el).render(<Providers><App /></Providers>)`.
+- `proxy.conf.json` ≈ `server.proxy` in `vite.config.ts`.
+- `ng generate component x` ≈ copying a component file by hand, but the CLI does it with the test file included.
+
+**Old way:** Apps started with `platformBrowserDynamic().bootstrapModule(AppModule)`, where `AppModule` was an `@NgModule` that declared every component, and zone.js was required.
+
+**Why this way:** A dev proxy means the browser talks to only one address, so we need no CORS setup, and production with nginx works the same way. Trade-off: the proxy works only in `ng serve`, so production needs its own forwarding (nginx, later).
+
+**Interview line:** "The Angular app calls a relative `/api` path; in dev the Angular dev server proxies it to FastAPI and in production nginx does, so there's no CORS and no hard-coded backend URL in the frontend."
+
+**Words to know:**
+- **Angular CLI (`ng`):** the command-line tool that creates, runs, tests, builds and generates Angular code.
+- **Standalone component:** a component that lists its own imports; no NgModule needed.
+- **Zoneless:** Angular updates the page when signals change, without zone.js watching every click and timer.
+- **OnPush:** a component is re-checked only when its inputs or the signals it reads change. It's the default for new components in Angular 22.
+- **Provider:** something registered with Angular so it can be injected where needed (like a value in a React Context).
+- **Proxy:** a server in the middle that forwards requests to another server.
+- **CORS:** a browser rule that blocks calls to a different address unless that server allows them.
+
+**Check yourself:** If the Angular app calls `/api/matches`, which URL does FastAPI actually receive, and why?
