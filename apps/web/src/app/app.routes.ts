@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { cvRequiredGuard } from './core/guards/cv-required.guard';
 
 /**
  * Every page is lazy-loaded: `loadComponent` + a dynamic import() means the
@@ -6,6 +7,7 @@ import { Routes } from '@angular/router';
  * like React.lazy(() => import('./TodayPage')).
  *
  * `title` sets the browser tab title for that page.
+ * `canActivate` lists guards that must allow the route before it opens.
  */
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'today' },
@@ -23,6 +25,8 @@ export const routes: Routes = [
     // :id is a route parameter; DraftReviewPage receives it as an input.
     path: 'drafts/:id',
     title: 'Draft review · JobMatch',
+    // The guard runs BEFORE the page loads; without a CV it redirects to /cv.
+    canActivate: [cvRequiredGuard],
     loadComponent: () =>
       import('./features/drafts/draft-review-page').then((m) => m.DraftReviewPage),
   },

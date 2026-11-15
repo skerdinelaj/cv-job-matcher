@@ -329,3 +329,43 @@ One entry per step, in simple words.
 - **`withFetch()`:** makes HttpClient use the browser's `fetch()` underneath.
 
 **Check yourself:** Why does the loading service use a counter instead of a simple `true`/`false`?
+
+## Step W3.3: Generated API types and the CV guard
+**The idea:** FastAPI already describes every endpoint and response shape in `/openapi.json`. A tool reads that file and writes the TypeScript types for the frontend, so the types always match the backend and nobody writes them by hand. A guard is a function the router runs before opening a page; ours sends me to the CV page when no CV is uploaded, because drafts are written from the CV.
+
+**What we built:**
+- `services/api/app/api/health.py`: a Pydantic `HealthOut` model as the response type, so the schema describes the exact shape.
+- `apps/web/package.json`: `api:types` script (`openapi-typescript` → `src/app/core/api/api-types.ts`) and an `overrides` entry so the tool accepts TypeScript 6.
+- `core/api/api-types.ts`: GENERATED types (never edit by hand; committed so the app builds without the API running).
+- `core/api/api.models.ts`: short names for generated types (`HealthResponse`).
+- `apps/web/.prettierignore`: Prettier skips the generated file.
+- `features/cv/cv.service.ts`: mock `hasCv` flag (real API in backend step 5).
+- `core/guards/cv-required.guard.ts`: no CV → redirect to `/cv?reason=cv-required`.
+- `app.routes.ts`: `canActivate: [cvRequiredGuard]` on `drafts/:id`.
+- `features/cv/cv-page.ts`: the notice (query param `reason` bound as an input) and a mock "uploaded" toggle.
+
+**Like in JavaScript / React:**
+- `openapi-typescript` ≈ GraphQL Codegen or `prisma generate`: types generated from a schema.
+- `components['schemas']['HealthOut']` ≈ looking up a type in a generated types file.
+- `npm overrides` ≈ `resolutions` in Yarn: force one package to use a specific dependency version.
+- `CanActivateFn` guard ≈ a `<ProtectedRoute>` wrapper or a React Router `loader` that does `throw redirect('/cv')`.
+- Returning a `UrlTree` ≈ returning `<Navigate to="/cv" />` instead of rendering the page.
+- Query param `?reason=x` as `input()` ≈ `useSearchParams().get('reason')`, but arriving as a prop.
+
+**Old way:** class guards (`@Injectable() class CvGuard implements CanActivate { canActivate() {...} }`) listed by class in `canActivate: [CvGuard]`, and query params read with `this.route.queryParamMap.subscribe(...)`.
+
+**Why this way:** One source of truth for API shapes (the Pydantic models), so a backend change shows up as a TypeScript error instead of a runtime bug. Trade-off: I must remember to run `npm run api:types` (with the API running) after changing a response model.
+
+**Interview line:** "Frontend API types are generated from FastAPI's OpenAPI schema, so the Pydantic models are the single source of truth, and a functional route guard redirects to the CV page with a `UrlTree` when prerequisites are missing."
+
+**Words to know:**
+- **OpenAPI schema:** a JSON file describing every endpoint, its inputs and its responses; FastAPI makes it automatically.
+- **Code generation:** a tool writes code (here: types) from a description, so you don't write it by hand.
+- **Pydantic model:** a Python class that defines and validates a data shape; FastAPI uses it for the schema.
+- **Peer dependency:** a package says "the project must already have X in this version range".
+- **npm overrides:** a `package.json` setting that forces which version of a dependency a package uses.
+- **Guard (`CanActivateFn`):** a function the router runs before opening a route; returns true or a redirect.
+- **UrlTree:** the router's object for "a URL to go to"; returning it from a guard means "redirect there".
+- **Query param:** the `?key=value` part of a URL.
+
+**Check yourself:** You add a field `version: str` to `HealthOut` in FastAPI. What two things must you do before the Angular app can use `health.value().version` without a TypeScript error?

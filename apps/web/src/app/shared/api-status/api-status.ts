@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { HealthResponse } from '../../core/api/health.model';
+import { HealthResponse } from '../../core/api/api.models';
 
 /**
  * A small "API ok / API down" badge for the top bar.
