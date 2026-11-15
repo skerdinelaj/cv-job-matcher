@@ -1,3 +1,8 @@
+<!-- Thin bar at the very top while any HTTP request is running (loadingInterceptor) -->
+@if (loading.isLoading()) {
+  <div class="loading-bar" role="progressbar" aria-label="Loading"></div>
+}
+
 <header class="topbar">
   <h1>JobMatch</h1>
 
@@ -10,7 +15,17 @@
       </a>
     }
   </nav>
+
+  <app-api-status class="topbar__status" />
 </header>
+
+<!-- Error banner: filled by the error interceptor and the global error handler -->
+@if (errors.message(); as message) {
+  <div class="error-banner" role="alert">
+    <span>{{ message }}</span>
+    <button type="button" class="error-banner__close" (click)="errors.clear()">Dismiss</button>
+  </div>
+}
 
 <main class="content">
   <!-- The page for the current URL renders here -->

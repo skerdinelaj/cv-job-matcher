@@ -284,3 +284,48 @@ One entry per step, in simple words.
 - **Wildcard route (`**`):** matches any URL not matched before it; must be last.
 
 **Check yourself:** You skipped a card, went to Stats and came back to Today. Why is the card still gone, but the filters reset?
+
+## Step W3.2: HttpClient, interceptors and global error handling
+**The idea:** Angular has a built-in HTTP client. `httpResource()` wraps it so a GET request's result arrives as signals (value, error, loading). Interceptors are functions every request passes through, so things like the `/api` prefix, the loading bar and error messages are written once instead of in every component.
+
+**What we built:**
+- `core/api/api.tokens.ts`: `API_BASE_URL` token, default `'/api'`.
+- `core/api/health.model.ts`: temporary `HealthResponse` type (replaced by generated types in W3.3).
+- `core/interceptors/api-base-url.interceptor.ts`: `/health` → `/api/health` (with `req.clone()`).
+- `core/interceptors/loading.interceptor.ts`: counts running requests; `finalize()` always stops the count.
+- `core/interceptors/error.interceptor.ts`: `catchError` → friendly message in the banner → `throwError` so callers still see the failure.
+- `core/loading/loading.service.ts`: request counter + `isLoading` computed.
+- `core/errors/error.service.ts`: the banner message (`show()`, `clear()`).
+- `core/errors/global-error-handler.ts`: our `ErrorHandler` for non-HTTP errors: logs and shows the banner.
+- `shared/api-status/api-status.ts`: "API ok / API down" badge with `httpResource` and a Check button (`reload()`).
+- `app.config.ts`: `provideHttpClient(withFetch(), withInterceptors([...]))` and `{ provide: ErrorHandler, useClass: GlobalErrorHandler }`.
+- `app.html` / `app.ts` / `app.scss`: loading bar, badge, error banner.
+- `app.spec.ts`: `provideHttpClient()` + `provideHttpClientTesting()` (fake network in tests).
+
+**Like in React:**
+- `httpResource<T>(() => '/health')` ≈ `useQuery({ queryKey: ['health'], queryFn: ... })`: `value()` ≈ `data`, `error()` ≈ `error`, `isLoading()` ≈ `isLoading`, `reload()` ≈ `refetch()`.
+- `HttpInterceptorFn` ≈ `axios.interceptors.request.use(...)` / `response.use(...)`, but one function handles both directions.
+- `req.clone({ url })` ≈ returning a new config object from an axios interceptor instead of mutating it.
+- `ErrorHandler` ≈ a top-level React error boundary + `window.onerror`.
+- `{ provide: ErrorHandler, useClass: GlobalErrorHandler }` ≈ passing your own implementation into a Context provider.
+- `provideHttpClientTesting()` ≈ mocking `fetch` with MSW in tests.
+
+**Old way:** `HttpClientModule` imported in `AppModule`, and class-based interceptors (`implements HttpInterceptor` with `intercept(req, next)`) registered with `{ provide: HTTP_INTERCEPTORS, useClass: X, multi: true }`; data loaded with `this.http.get(...).subscribe(...)` and manual loading flags.
+
+**Why this way:** Cross-cutting concerns (URL prefix, loading, errors) live in one place each, so components only ask for data. Trade-off: interceptors are "invisible" — when a request behaves oddly, remember to look there too.
+
+**Interview line:** "All HTTP goes through functional interceptors for the base URL, a request-counting loading indicator and global error mapping, while components read data through signal-based `httpResource`."
+
+**Words to know:**
+- **HttpClient:** Angular's service for HTTP requests; returns RxJS Observables.
+- **httpResource:** a signal-based wrapper over HttpClient for reading data.
+- **Interceptor:** a function that runs on every HTTP request and its response.
+- **Observable:** a stream of values over time (RxJS); an HTTP request is a stream with one value.
+- **`pipe()`:** chains RxJS operators onto an Observable, like `.then()` steps.
+- **`finalize()`:** an RxJS operator that runs when the stream ends for any reason.
+- **`catchError()` / `throwError()`:** catch an error in a stream / pass an error on.
+- **ErrorHandler:** Angular's single place where all uncaught errors go.
+- **`useClass` provider:** "when someone asks for X, create this class instead".
+- **`withFetch()`:** makes HttpClient use the browser's `fetch()` underneath.
+
+**Check yourself:** Why does the loading service use a counter instead of a simple `true`/`false`?
